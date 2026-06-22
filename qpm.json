@@ -49,7 +49,7 @@
     },
     {
       "id": "scotland2",
-      "versionRange": "=0.1.6",
+      "versionRange": "=0.1.7",
       "additionalData": {}
     },
     {
@@ -104,7 +104,7 @@
     },
     {
       "id": "paper2_scotland2",
-      "versionRange": "^4.6.0",
+      "versionRange": "^4.7.0",
       "additionalData": {}
     },
     {
