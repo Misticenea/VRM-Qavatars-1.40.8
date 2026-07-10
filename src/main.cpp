@@ -13,6 +13,7 @@
 #include "GlobalNamespace/MainCamera.hpp"
 #include "GlobalNamespace/MainEffectContainerSO.hpp"
 #include "GlobalNamespace/MainEffectSO.hpp"
+#include "GlobalNamespace/SmoothCamera.hpp"
 
 #include "UnityEngine/SceneManagement/SceneManager.hpp"
 #include "UnityEngine/Camera.hpp"
@@ -52,10 +53,22 @@ modloader::ModInfo modInfo{MOD_ID, VERSION, GIT_COMMIT};
 MAKE_HOOK_MATCH(MainCameraHook, &GlobalNamespace::MainCamera::Awake, void, GlobalNamespace::MainCamera* self)
 {
     MainCameraHook(self);
-    constexpr int fpmask =
-           2147483647 &
-           ~(1 << 3);
+    constexpr int fpmask = 2147483647 & ~(1 << 3); // exclude third-person avatar layer
     self->get_camera()->set_cullingMask(fpmask);
+}
+
+// Set SmoothCamera culling mask based on perspective so 3rd-person recordings show the full avatar body
+MAKE_HOOK_MATCH(SmoothCameraHook, &GlobalNamespace::SmoothCamera::Init, void,
+    GlobalNamespace::SmoothCamera* self,
+    float_t fieldOfView, float_t positionSmooth, float_t rotationSmooth,
+    bool thirdPersonEnabled,
+    UnityEngine::Vector3 thirdPersonPosition,
+    UnityEngine::Vector3 thirdPersonEulerAngles)
+{
+    SmoothCameraHook(self, fieldOfView, positionSmooth, rotationSmooth, thirdPersonEnabled, thirdPersonPosition, thirdPersonEulerAngles);
+    constexpr int fpmask = 2147483647 & ~(1 << 3); // exclude third-person avatar (layer 3)
+    constexpr int tpmask = 2147483647 & ~(1 << 6); // exclude first-person avatar (layer 6)
+    self->_camera->set_cullingMask(thirdPersonEnabled ? tpmask : fpmask);
 }
 
 //I know
@@ -115,6 +128,7 @@ extern "C" void late_load() {
     custom_types::Register::AutoRegister(); 
 
     INSTALL_HOOK(VRMLogger, MainCameraHook);
+    INSTALL_HOOK(VRMLogger, SmoothCameraHook);
     INSTALL_HOOK(VRMLogger, SceneManager_Internal_ActiveSceneChanged);
     INSTALL_HOOK(VRMLogger, SaberPatch);
     INSTALL_HOOK(VRMLogger, BloomHook);
