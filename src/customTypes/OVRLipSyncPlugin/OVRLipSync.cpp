@@ -109,7 +109,7 @@ namespace VRMQavatars::OVRLipSync
             list->set_Item(i, audioBuffer[i]);
         }
         auto gcHandle = System::Runtime::InteropServices::GCHandle::Alloc(list, System::Runtime::InteropServices::GCHandleType::Pinned);
-        const auto result = ovrLipSyncDll_ProcessFrameEx(context, gcHandle.AddrOfPinnedObject(), num, audioDataType, &frame);
+        const auto result = ovrLipSyncDll_ProcessFrameEx(context, static_cast<void*>(gcHandle.AddrOfPinnedObject().m_value), num, audioDataType, &frame);
         gcHandle.Free();
         return result;
     }

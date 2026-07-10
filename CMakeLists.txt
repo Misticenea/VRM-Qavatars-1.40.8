@@ -66,6 +66,7 @@ add_library(
         SHARED
         ${cpp_file_list}
         ${c_file_list}
+        ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/And64InlineHook.cpp
 )
 
 # Add any assets

@@ -6,7 +6,7 @@
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/Matrix4x4.hpp"
 
-#include "AssetLib/ArrayUtils.hpp"
+#include "AssetLib/arrayUtils.hpp"
 
 namespace AssetLib::Generators
 {

@@ -3,6 +3,10 @@
 #include "main.hpp"
 #include "rapidjson-macros/shared/macros.hpp"
 
+// rapidjson-macros 2.1.0 renamed DECLARE_JSON_CLASS to DECLARE_JSON_STRUCT with body outside the macro
+#define DECLARE_JSON_CLASS(name, ...) DECLARE_JSON_STRUCT(name) { __VA_ARGS__ };
+#define DISCARD_EXTRA_FIELDS
+
 #define DECLARE_CONFIG(name, ...) \
 DECLARE_JSON_CLASS(name##_t, \
     DISCARD_EXTRA_FIELDS \
@@ -43,7 +47,7 @@ inline name##_t& get##name() { \
 
 #define CONFIG_VALUE(name, type, jsonName, def, ...) \
 private: \
-NAMED_VALUE_DEFAULT(ConfigUtils::Specialization<type>::JSONType, __##name, def, jsonName) \
+NAMED_VALUE_DEFAULT(ConfigUtils::Specialization<type>::JSONType, __##name, def, jsonName); \
 public: \
 ConfigUtils::ConfigValue<type> name = {&this->Save, &__##name, jsonName, def __VA_OPT__(,) __VA_ARGS__};
 
@@ -142,8 +146,8 @@ clazz& operator=(const UnityEngine::clazz& other) { construct; return *this; } \
 operator UnityEngine::clazz() const { return UnityEngine::clazz convert; }
 
 DECLARE_JSON_CLASS(Vector2,
-    VALUE(float, x)
-    VALUE(float, y)
+    VALUE(float, x);
+    VALUE(float, y);
     CONVERSION(Vector2,
         x = other.x; y = other.y;,
         (x, y)
@@ -153,9 +157,9 @@ DECLARE_JSON_CLASS(Vector2,
 )
 
 DECLARE_JSON_CLASS(Vector3,
-    VALUE(float, x)
-    VALUE(float, y)
-    VALUE(float, z)
+    VALUE(float, x);
+    VALUE(float, y);
+    VALUE(float, z);
     CONVERSION(Vector3,
         x = other.x; y = other.y; z = other.z;,
         (x, y, z)
@@ -165,10 +169,10 @@ DECLARE_JSON_CLASS(Vector3,
 )
 
 DECLARE_JSON_CLASS(Vector4,
-    VALUE(float, x)
-    VALUE(float, y)
-    VALUE(float, z)
-    VALUE(float, w)
+    VALUE(float, x);
+    VALUE(float, y);
+    VALUE(float, z);
+    VALUE(float, w);
     CONVERSION(Vector4,
         x = other.x; y = other.y; z = other.z; w = other.w;,
         (x, y, z, w)
@@ -178,10 +182,10 @@ DECLARE_JSON_CLASS(Vector4,
 )
 
 DECLARE_JSON_CLASS(Color,
-    VALUE(float, r)
-    VALUE(float, g)
-    VALUE(float, b)
-    VALUE(float, a)
+    VALUE(float, r);
+    VALUE(float, g);
+    VALUE(float, b);
+    VALUE(float, a);
     CONVERSION(Color,
         r = other.r; g = other.g; b = other.b; a = other.a;,
         (r, g, b, a)
