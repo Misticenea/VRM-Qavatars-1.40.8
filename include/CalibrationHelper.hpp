@@ -19,5 +19,12 @@ namespace VRMQavatars
 
         //4 second calibration process to allow player to align themselves and get into tpose
         static custom_types::Helpers::Coroutine StartCalibrationProc();
+
+        //Starts the calibration process on a persistent object, so leaving the current menu doesn't interrupt it
+        static void StartCalibration();
+
+        static bool IsCalibrating() { return calibrating; }
+    private:
+        static inline bool calibrating = false;
     };
 }

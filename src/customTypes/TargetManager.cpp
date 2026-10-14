@@ -29,6 +29,38 @@ namespace VRMQavatars
 {
     CP_SDK_IL2CPP_INHERIT_INIT(TargetManager);
 
+#ifdef VRMQ_DIAG
+    namespace
+    {
+        // logged once a second in game by debug builds (qpm s build-debug / qmod-debug)
+        void LogDiagnostics(TargetManager* self, const Sombrero::FastVector3& headsetPos, const bool inReplay)
+        {
+            static float lastTime = 0.0f;
+            const float now = UnityEngine::Time::get_unscaledTime();
+            if(!SceneEventManager::inGame || now - lastTime < 1.0f)
+                return;
+            lastTime = now;
+
+            auto fmtVec = [](Sombrero::FastVector3 v) { return fmt::format("({:.3f}, {:.3f}, {:.3f})", v.x, v.y, v.z); };
+            const auto refs = self->vrik->references;
+            auto root = self->get_transform();
+            const Sombrero::FastVector3 headTarget = self->headTarget->transform->position;
+            const Sombrero::FastVector3 leftTarget = self->leftHandTarget->transform->position;
+            const Sombrero::FastVector3 rightTarget = self->rightHandTarget->transform->position;
+
+            VRMLogger.info("[diag] replay={} noodle={} root={} rootScale={:.3f} headToEyes={}",
+                inReplay, self->noodleTrack != nullptr, fmtVec(root->position), root->lossyScale.y, fmtVec(self->headToEyesOffset));
+            VRMLogger.info("[diag] headset={} headTarget={} headBone={} headDist={:.3f}",
+                fmtVec(headsetPos), fmtVec(headTarget), fmtVec(refs->head->position), UnityEngine::Vector3::Distance(headTarget, refs->head->position));
+            VRMLogger.info("[diag] leftTarget={} leftBone={} leftDist={:.3f} rightTarget={} rightBone={} rightDist={:.3f}",
+                fmtVec(leftTarget), fmtVec(refs->leftHand->position), UnityEngine::Vector3::Distance(leftTarget, refs->leftHand->position),
+                fmtVec(rightTarget), fmtVec(refs->rightHand->position), UnityEngine::Vector3::Distance(rightTarget, refs->rightHand->position));
+            VRMLogger.info("[diag] leftFoot={} rightFoot={} pelvis={}",
+                fmtVec(refs->leftFoot->position), fmtVec(refs->rightFoot->position), fmtVec(refs->pelvis->position));
+        }
+    }
+#endif
+
     CP_SDK_IL2CPP_DECLARE_CTOR_IMPL(TargetManager)
     {
 
@@ -188,5 +220,9 @@ namespace VRMQavatars
         // the head target drives the head bone, so move it from the eyes back to the head bone
         headTarget->transform->position = headPos - headRot * headToEyesOffset;
         headTarget->transform->rotation = headRot;
+
+#ifdef VRMQ_DIAG
+        LogDiagnostics(this, headPos, replay.has_value() && replay.value()());
+#endif
     }
 }

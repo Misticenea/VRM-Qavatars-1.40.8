@@ -56,6 +56,12 @@ add_compile_definitions(GIT_MODIFIED=${GIT_MODIFIED})
 add_compile_definitions(VERSION=\"${MOD_VERSION}\")
 add_compile_definitions(MOD_ID=\"${MOD_ID}\")
 
+# debug builds (qpm s build-debug / qmod-debug) log avatar posing diagnostics every second while in game
+option(VRMQ_DIAG "Log avatar posing diagnostics" OFF)
+if(VRMQ_DIAG)
+    add_compile_definitions(VRMQ_DIAG)
+endif()
+
 # recursively get all src files
 RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
 RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)

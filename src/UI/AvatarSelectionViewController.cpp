@@ -202,8 +202,7 @@ namespace VRMQavatars::UI::ViewControllers {
 
     void AvatarSelectionViewController::Calibrate()
     {
-        if(AvatarManager::currentContext == nullptr) return;
-        this->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(CalibrationHelper::StartCalibrationProc()));
+        CalibrationHelper::StartCalibration();
     }
 
     void AvatarSelectionViewController::DidActivate()

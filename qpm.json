@@ -18,6 +18,9 @@
       "build": [
         "pwsh ./scripts/build.ps1"
       ],
+      "build-debug": [
+        "pwsh ./scripts/build.ps1 -diag"
+      ],
       "copy": [
         "pwsh ./scripts/copy.ps1"
       ],
@@ -26,6 +29,10 @@
       ],
       "qmod": [
         "pwsh ./scripts/build.ps1",
+        "pwsh ./scripts/createqmod.ps1"
+      ],
+      "qmod-debug": [
+        "pwsh ./scripts/build.ps1 -diag",
         "pwsh ./scripts/createqmod.ps1"
       ],
       "restart": [

@@ -2,6 +2,7 @@
 
 #include <UnityEngine/Time.hpp>
 #include <UnityEngine/WaitForEndOfFrame.hpp>
+#include <chatplex-sdk-bs/shared/CP_SDK/Unity/MTCoroutineStarter.hpp>
 
 #include "GlobalNamespace/OVRPlugin.hpp"
 #include "AvatarManager.hpp"
@@ -71,6 +72,17 @@ namespace VRMQavatars
         return avatarHandAverageY;
     }
 
+    float GetAvatarEyeHeight()
+    {
+        const auto vrik = AvatarManager::vrik;
+        auto leftEye = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::LeftEye);
+        auto rightEye = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::RightEye);
+        if(leftEye && rightEye)
+            return (leftEye->get_position().y + rightEye->get_position().y) / 2.0f;
+        // default VRM first person offset
+        return vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::Head)->get_position().y + 0.06f;
+    }
+
     float GetAvatarHandDist()
     {
         const auto vrik = AvatarManager::vrik;
@@ -90,6 +102,10 @@ namespace VRMQavatars
         if(type == 1)
         {
             return GetAvatarHandHeight();
+        }
+        if(type == 3)
+        {
+            return GetAvatarEyeHeight();
         }
         return 1.0f;
     }
@@ -116,6 +132,15 @@ namespace VRMQavatars
             const float readHandAverageY = (leftHandPos.y + rightHandPos.y) / 2.0f;
             const float scale = readHandAverageY / avatarHandAverageY;
             VRMLogger.info("{} {} {}", readHandAverageY, avatarHandAverageY, scale);
+            return scale;
+        }
+        if(type == 3)
+        {
+            // the headset sits at the eyes, so match the avatar's eye height to it
+            const float avatarEyeHeight = baseScale.has_value() ? baseScale.value() : GetAvatarEyeHeight();
+            const float readEyeHeight = CalibrationHelper::GetPosition(GlobalNamespace::OVRPlugin::Node::Head).y;
+            const float scale = readEyeHeight / avatarEyeHeight;
+            VRMLogger.info("{} {} {}", readEyeHeight, avatarEyeHeight, scale);
             return scale;
         }
         return Config::ConfigManager::GetGlobalConfig().FixedScale.GetValue();
@@ -170,10 +195,19 @@ namespace VRMQavatars
             springBone->set_enabled(true);
     }
 
+    void CalibrationHelper::StartCalibration()
+    {
+        if(calibrating || AvatarManager::currentContext == nullptr)
+            return;
+        CP_SDK::Unity::MTCoroutineStarter::Start(custom_types::Helpers::CoroutineHelper::New(StartCalibrationProc()));
+    }
+
     custom_types::Helpers::Coroutine CalibrationHelper::StartCalibrationProc()
     {
+        calibrating = true;
         float time = 0.0f;
-        auto rootGameObject = AvatarManager::currentContext->rootGameObject->get_transform();
+        const auto context = AvatarManager::currentContext;
+        auto rootGameObject = context->rootGameObject->get_transform();
 
         PrepareContextForCalibration();
 
@@ -197,8 +231,16 @@ namespace VRMQavatars
             rootGameObject->set_localScale(Sombrero::FastVector3(scale, scale, scale));
 
             co_yield reinterpret_cast<System::Collections::IEnumerator*>(CRASH_UNLESS(UnityEngine::WaitForEndOfFrame::New_ctor()));
+
+            // the avatar was switched during calibration, its objects are gone
+            if(AvatarManager::currentContext != context)
+            {
+                calibrating = false;
+                co_return;
+            }
         }
         Calibrate(std::nullopt);
+        calibrating = false;
         co_return;
     }
 }

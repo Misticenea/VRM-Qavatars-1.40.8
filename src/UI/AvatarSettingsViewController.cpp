@@ -424,7 +424,7 @@ namespace VRMQavatars::UI::ViewControllers {
 
     std::shared_ptr<CP_SDK::XUI::XUIVLayout> AvatarSettingsViewController::BuildCalibrationTab()
     {
-        std::vector<std::u16string> calibOptions = { u"Match Armspans", u"Match Heights", u"Fixed" };
+        std::vector<std::u16string> calibOptions = { u"Match Armspans", u"Match Heights", u"Fixed", u"Match Eye Height" };
         return CP_SDK::XUI::XUIVLayout::Make(
             {
                 CP_SDK::XUI::XUIText::Make(u"Calibration Type"),
