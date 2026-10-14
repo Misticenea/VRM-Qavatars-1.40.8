@@ -250,5 +250,7 @@ DECLARE_CONFIG(AvatarConfig,
     CONFIG_VALUE(CalibratedScale, float, "CalibratedScale", 1.0f);
 
     CONFIG_VALUE(ArmCalibrationScale, float, "ArmCalibrationScale", 1.0f);
+    // measured by "Match Eye Height" calibration, multiplied with ArmCalibrationScale
+    CONFIG_VALUE(AutoArmScale, float, "AutoArmScale", 1.0f);
     CONFIG_VALUE(LegCalibrationScale, float, "LegCalibrationScale", 1.0f);
 )
