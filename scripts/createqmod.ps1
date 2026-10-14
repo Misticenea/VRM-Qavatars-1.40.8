@@ -35,7 +35,7 @@ if ((-not ($cover -eq "./")) -and (Test-Path $cover)) {
     $filelist += ,$cover
 }
 
-foreach ($mod in $modJson.modFiles) {
+foreach ($mod in @($modJson.modFiles) + @($modJson.lateModFiles)) {
     $path = "./build/" + $mod
     if (-not (Test-Path $path)) {
         $path = "./extern/libs/" + $mod
@@ -62,7 +62,10 @@ foreach ($lib in $modJson.libraryFiles) {
     $filelist += $path
 }
 
-$filelist += "./shaders.sbund";
+# shaders are embedded in the .so via kaleb assets; only package a loose copy if present
+if (Test-Path "./shaders.sbund") {
+    $filelist += "./shaders.sbund"
+}
 
 $zip = $qmodName + ".zip"
 $qmod = $qmodName + ".qmod"

@@ -213,7 +213,7 @@ namespace VRMQavatars::FinalIK {
         Sombrero::FastQuaternion quaternion4 = rotations[index + 3];
         Sombrero::FastVector3 vector5 = positions[index + 4];
         Sombrero::FastQuaternion quaternion5 = rotations[index + 4];
-        hasLegs = hasLegs;
+        this->hasLegs = hasLegs;
         if (!hasChest)
         {
             vector3 = vector2;
@@ -221,8 +221,8 @@ namespace VRMQavatars::FinalIK {
         }
         if (!initiated)
         {
-            hasChest = hasChest;
-            hasNeck = hasNeck;
+            this->hasChest = hasChest;
+            this->hasNeck = hasNeck;
             headHeight = V3Tools::ExtractVertical(vector5 - positions[0], rotations[0] * Sombrero::FastVector3::up(), 1.0f).magnitude;
             int num = 3;
             if (hasChest)

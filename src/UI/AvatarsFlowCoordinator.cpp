@@ -8,13 +8,13 @@ DEFINE_TYPE(VRMQavatars::UI::FlowCoordinators, AvatarsFlowCoordinator);
 namespace VRMQavatars::UI
 {
     void FlowCoordinators::AvatarsFlowCoordinator::Awake() {
-        if (!MirrorViewController || !MirrorViewController->m_CachedPtr) {
+        if (!MirrorViewController || !MirrorViewController->m_CachedPtr.m_value) {
             MirrorViewController = BSML::Helpers::CreateViewController<ViewControllers::MirrorViewController*>();
         }
-        if (!AvatarSelectionViewController ||  !AvatarSelectionViewController->m_CachedPtr) {
+        if (!AvatarSelectionViewController ||  !AvatarSelectionViewController->m_CachedPtr.m_value) {
             AvatarSelectionViewController = BSML::Helpers::CreateViewController<ViewControllers::AvatarSelectionViewController*>();
         }
-        if (!AvatarSettingsViewController ||  !AvatarSettingsViewController->m_CachedPtr) {
+        if (!AvatarSettingsViewController ||  !AvatarSettingsViewController->m_CachedPtr.m_value) {
             AvatarSettingsViewController = BSML::Helpers::CreateViewController<ViewControllers::AvatarSettingsViewController*>();
         }
     }

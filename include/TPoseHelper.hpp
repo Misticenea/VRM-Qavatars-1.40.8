@@ -1,6 +1,8 @@
 #pragma once
 #include <sombrero/shared/FastVector3.hpp>
 
+#include "UnityEngine/HumanBone.hpp"
+#include "UnityEngine/SkeletonBone.hpp"
 #include "UnityEngine/Avatar.hpp"
 
 #include "UnityEngine/Transform.hpp"

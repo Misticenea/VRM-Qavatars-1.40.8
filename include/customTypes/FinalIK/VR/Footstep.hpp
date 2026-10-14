@@ -10,7 +10,7 @@ namespace VRMQavatars::FinalIK {
     class Footstep {
     public:
         Footstep(Sombrero::FastQuaternion rootRotation, Sombrero::FastVector3 footPosition, Sombrero::FastQuaternion footRotation, Sombrero::FastVector3 characterSpaceOffset) {
-            characterSpaceOffset = characterSpaceOffset;
+            this->characterSpaceOffset = characterSpaceOffset;
             Reset(rootRotation, footPosition, footRotation);
             footRelativeToRoot = Sombrero::FastQuaternion(Sombrero::FastQuaternion::Inverse(rootRotation)) * rotation;
         }

@@ -2,6 +2,8 @@
 
 #include "AssetLib/VRMConcepts.hpp"
 
+#include "UnityEngine/HumanBone.hpp"
+#include "UnityEngine/SkeletonBone.hpp"
 #include "UnityEngine/Avatar.hpp"
 #include "UnityEngine/GameObject.hpp"
 

@@ -479,22 +479,26 @@ namespace VRMQavatars::UI::ViewControllers {
                         ->Bind(&armScaleSlider)
                         ->AsShared(),
                 }),
-                /*CP_SDK::XUI::XUIHLayout::Make(
+                CP_SDK::XUI::XUIHLayout::Make(
                 {
                     CP_SDK::XUI::XUIText::Make(u"Leg Scale (Per avatar)"),
                     CP_SDK::XUI::XUISlider::Make()
                         ->SetMinValue(0.75f)
-                        ->SetMaxValue(1.25f)
+                        ->SetMaxValue(1.5f)
+                        ->SetIncrements(75)
                         ->SetValue(AvatarManager::currentContext != nullptr ? Config::ConfigManager::GetAvatarConfig().LegCalibrationScale.GetValue() : 1.0f)
                         ->SetInteractable(AvatarManager::currentContext != nullptr)
                         ->OnValueChanged([](const float val)
                         {
-                            Config::ConfigManager::GetAvatarConfig().LegCalibrationScale.SetValue(val);
-                            Config::ConfigManager::SaveAvatarConfig();
+                            if(AvatarManager::currentContext != nullptr)
+                            {
+                                Config::ConfigManager::GetAvatarConfig().LegCalibrationScale.SetValue(val);
+                                Config::ConfigManager::SaveAvatarConfig();
+                            }
                         })
                         ->Bind(&legScaleSlider)
                         ->AsShared()
-                })*/
+                })
             }
         );
     }
@@ -504,8 +508,8 @@ namespace VRMQavatars::UI::ViewControllers {
         armScaleSlider->SetValue(AvatarManager::currentContext != nullptr ? Config::ConfigManager::GetAvatarConfig().ArmCalibrationScale.GetValue() : 1.0f);
         armScaleSlider->SetInteractable(AvatarManager::currentContext != nullptr);
 
-        //legScaleSlider->SetValue(AvatarManager::currentContext != nullptr ? Config::ConfigManager::GetAvatarConfig().LegCalibrationScale.GetValue() : 1.0f);
-        //legScaleSlider->SetInteractable(AvatarManager::currentContext != nullptr);
+        legScaleSlider->SetValue(AvatarManager::currentContext != nullptr ? Config::ConfigManager::GetAvatarConfig().LegCalibrationScale.GetValue() : 1.0f);
+        legScaleSlider->SetInteractable(AvatarManager::currentContext != nullptr);
     }
 
     std::shared_ptr<CP_SDK::XUI::XUIHLayout> AvatarSettingsViewController::BuildHandOffsetsTab()

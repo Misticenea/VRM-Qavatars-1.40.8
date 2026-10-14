@@ -63,6 +63,9 @@ namespace VRMQavatars
         UnityEngine::Quaternion replayRightSaberRot;
 
         Structs::OffsetPose offset;
+
+        // offset from the head bone to the eyes in the head bone's space, the headset tracks the eyes
+        Sombrero::FastVector3 headToEyesOffset;
     };
 }
 

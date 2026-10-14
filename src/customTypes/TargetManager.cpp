@@ -8,6 +8,7 @@
 
 #include "SceneEventManager.hpp"
 #include "TPoseHelper.hpp"
+#include "ReplayCorrection.hpp"
 
 #include "GlobalNamespace/OVRSkeletonRenderer.hpp"
 #include "GlobalNamespace/OVRBody.hpp"
@@ -100,28 +101,28 @@ namespace VRMQavatars
         {
             auto camTrans = UnityEngine::GameObject::Find("PlayerTransformsHeadReplacement");
             if(camTrans == nullptr) return;
-            headPos = camTrans->transform->position;
-            headRot = camTrans->transform->rotation;
+            // the head replacement is parented to the tracking space origin, like the real camera
+            headPos = camTrans->transform->localPosition;
+            headRot = camTrans->transform->localRotation;
 
             leftHandPos = replayLeftSaberPos;
             leftHandRot = replayLeftSaberRot;
 
             rightHandPos = replayRightSaberPos;
             rightHandRot = replayRightSaberRot;
+
+            // the replay contains the game's poses, convert them to the raw poses used in live play
+            ReplayCorrection::Apply(ReplayCorrection::LeftHand, leftHandPos, leftHandRot);
+            ReplayCorrection::Apply(ReplayCorrection::RightHand, rightHandPos, rightHandRot);
         }
         else
         {
-            const auto leftHandPose = GlobalNamespace::OVRPlugin::GetNodePose(GlobalNamespace::OVRPlugin::Node::HandLeft, GlobalNamespace::OVRPlugin::Step::Render);
-            leftHandPos = {leftHandPose.Position.x, leftHandPose.Position.y, -leftHandPose.Position.z};
-            leftHandRot = {-leftHandPose.Orientation.x, -leftHandPose.Orientation.y, leftHandPose.Orientation.z, leftHandPose.Orientation.w};
+            ReplayCorrection::GetTrackedPose(GlobalNamespace::OVRPlugin::Node::HandLeft, leftHandPos, leftHandRot);
+            ReplayCorrection::GetTrackedPose(GlobalNamespace::OVRPlugin::Node::HandRight, rightHandPos, rightHandRot);
+            ReplayCorrection::GetTrackedPose(GlobalNamespace::OVRPlugin::Node::Head, headPos, headRot);
 
-            const auto rightHandPose = GlobalNamespace::OVRPlugin::GetNodePose(GlobalNamespace::OVRPlugin::Node::HandRight, GlobalNamespace::OVRPlugin::Step::Render);
-            rightHandPos = {rightHandPose.Position.x, rightHandPose.Position.y, -rightHandPose.Position.z};
-            rightHandRot = {-rightHandPose.Orientation.x, -rightHandPose.Orientation.y, rightHandPose.Orientation.z, rightHandPose.Orientation.w};
-
-            const auto headPose = GlobalNamespace::OVRPlugin::GetNodePose(GlobalNamespace::OVRPlugin::Node::Head, GlobalNamespace::OVRPlugin::Step::Render);
-            headPos = {headPose.Position.x, headPose.Position.y, -headPose.Position.z};
-            headRot = {-headPose.Orientation.x, -headPose.Orientation.y, headPose.Orientation.z, headPose.Orientation.w};
+            if(!SceneEventManager::inGame)
+                ReplayCorrection::SaveIfDirty();
         }
 
         VMC::VMCClient::SendHeadsetPos(headPos, headRot);
@@ -184,7 +185,8 @@ namespace VRMQavatars
         rightHandTarget->transform->Rotate({offset.rotX, offset.rotY, -offset.rotZ});
         rightHandTarget->transform->Translate({-offset.posX, offset.posY, offset.posZ});
 
-        headTarget->transform->position = headPos;
+        // the head target drives the head bone, so move it from the eyes back to the head bone
+        headTarget->transform->position = headPos - headRot * headToEyesOffset;
         headTarget->transform->rotation = headRot;
     }
 }

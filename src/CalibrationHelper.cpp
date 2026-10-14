@@ -37,16 +37,22 @@ namespace VRMQavatars
         auto hips = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::Hips);
         auto LArm = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::LeftUpperArm);
         auto RArm = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::RightUpperArm);
-        auto LLeg = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::LeftUpperLeg);
-        auto RLeg = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::RightUpperLeg);
+        auto LLowerLeg = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::LeftLowerLeg);
+        auto RLowerLeg = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::RightLowerLeg);
+        auto LFoot = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::LeftFoot);
+        auto RFoot = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::RightFoot);
 
         LArm->set_localScale({armScale, LArm->localScale.y, LArm->localScale.z});
         RArm->set_localScale({armScale, RArm->localScale.y, RArm->localScale.z});
-        LLeg->set_localScale({legScale, legScale, legScale});
-        RLeg->set_localScale({legScale, legScale, legScale});
 
-        auto localPos = hips->get_localPosition();
-        hips->set_localPosition({localPos.x, localPos.y*legScale, localPos.z});
+        // lengthen the legs by moving the knee and ankle joints instead of scaling the bones,
+        // so the legs keep their thickness and the feet keep their size
+        const float footHeight = LFoot->get_position().y;
+        for (auto joint : {LLowerLeg, RLowerLeg, LFoot, RFoot})
+            joint->set_localPosition(Sombrero::FastVector3(joint->get_localPosition()) * legScale);
+
+        // raise the hips so the feet stay on the ground
+        hips->set_position(Sombrero::FastVector3(hips->get_position()) + Sombrero::FastVector3(0.0f, footHeight - LFoot->get_position().y, 0.0f));
     }
 
     Sombrero::FastVector3 CalibrationHelper::GetPosition(const GlobalNamespace::OVRPlugin::Node node)
@@ -132,6 +138,23 @@ namespace VRMQavatars
         avaConfig.CalibratedScale.SetValue(calibScale);
 
         rootGameObject->set_localScale(UnityEngine::Vector3(calibScale, calibScale, calibScale));
+
+        // the headset is at the eyes, not the head bone, so measure where the eyes are relative to the head bone
+        auto head = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::Head);
+        auto leftEye = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::LeftEye);
+        auto rightEye = vrik->animator->GetBoneTransform(UnityEngine::HumanBodyBones::RightEye);
+        const Sombrero::FastQuaternion invHeadRot = UnityEngine::Quaternion::Inverse(head->get_rotation());
+        if(leftEye && rightEye)
+        {
+            const auto eyes = Sombrero::FastVector3::Lerp(leftEye->get_position(), rightEye->get_position(), 0.5f);
+            targetManager->headToEyesOffset = invHeadRot * (eyes - Sombrero::FastVector3(head->get_position()));
+        }
+        else
+        {
+            // default VRM first person offset
+            targetManager->headToEyesOffset = Sombrero::FastVector3(0.0f, 0.06f, 0.0f) * calibScale;
+        }
+        VRMLogger.info("head to eyes offset ({}, {}, {})", targetManager->headToEyesOffset.x, targetManager->headToEyesOffset.y, targetManager->headToEyesOffset.z);
 
         HandController::ApplyHandPose(vrik->animator, Config::ConfigManager::GetFingerPoseSettings().grabPose);
 

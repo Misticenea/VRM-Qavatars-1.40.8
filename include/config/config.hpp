@@ -179,6 +179,16 @@ DECLARE_JSON_CLASS(MirrorSettings,
     VALUE_DEFAULT(bool, showHandle, true);
 )
 
+// Measured difference between the raw OVR controller poses and the game's saber poses,
+// expressed in the raw pose's local frame. Used to undo the game's controller offsets in replays.
+DECLARE_JSON_CLASS(ReplayCorrectionSettings,
+    VALUE_DEFAULT(bool, handsMeasured, false);
+    VALUE_DEFAULT(VectorThree, leftPos, VectorThree(0, 0, 0));
+    VALUE_DEFAULT(VectorThree, leftRot, VectorThree(0, 0, 0));
+    VALUE_DEFAULT(VectorThree, rightPos, VectorThree(0, 0, 0));
+    VALUE_DEFAULT(VectorThree, rightRot, VectorThree(0, 0, 0));
+)
+
 DECLARE_JSON_CLASS(WindSettings,
     VALUE_DEFAULT(bool, enabled, true);
     VALUE_DEFAULT(float, windStrength, 1.0f);
@@ -203,6 +213,7 @@ DECLARE_CONFIG(GlobalConfig,
     CONFIG_VALUE(VMC, VMCSettings, "VMC", {});
     CONFIG_VALUE(Mirror, MirrorSettings, "Mirror", {});
     CONFIG_VALUE(Wind, WindSettings, "Wind", {});
+    CONFIG_VALUE(ReplayCorrection, ReplayCorrectionSettings, "Replay Correction", {});
 
     CONFIG_VALUE(selectedFileName, std::string, "selectedFileName", "");
     CONFIG_VALUE(hasSelected, bool, "hasSelected", false);
