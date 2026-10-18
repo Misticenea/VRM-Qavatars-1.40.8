@@ -7,6 +7,7 @@
 - Full Body tracking/Virtual Motion Capture support
 - A feature rich mirror to show off your avatar in recordings
 - Expression Triggers
+- Fake leg motion without foot trackers: beat synced steps, leg actions on controller inputs and feet lifting when you jump (VRIK > Leg Motion / Leg Buttons)
 - Playable Performance
 - And a ton more, with even more in the future
 ## Support

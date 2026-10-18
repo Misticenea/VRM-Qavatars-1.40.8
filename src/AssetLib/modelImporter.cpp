@@ -8,6 +8,7 @@
 #include "customTypes/AniLipSync/AnimMorphTarget.hpp"
 #include "customTypes/AniLipSync/LowLatencyLipSyncContext.hpp"
 #include "customTypes/BlendShape/BlendShapeController.hpp"
+#include "customTypes/LegMotionController.hpp"
 
 #include "main.hpp"
 #include "paper2_scotland2/shared/Profiler.hpp"
@@ -434,6 +435,11 @@ namespace AssetLib
                 auto targetManager = modelContext->rootGameObject->AddComponent<VRMQavatars::TargetManager*>();
                 targetManager->vrik = vrik;
                 targetManager->Initialize();
+
+                auto legMotion = modelContext->rootGameObject->AddComponent<VRMQavatars::LegMotionController*>();
+                legMotion->vrik = vrik;
+                legMotion->targetManager = targetManager;
+                legMotion->LoadSettings();
 
                 VRMProfiler.mark("Target Manager Initialized");
 

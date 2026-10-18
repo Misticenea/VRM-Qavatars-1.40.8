@@ -17,6 +17,7 @@
 #include "config/ConfigManager.hpp"
 #include "customTypes/VRMWind.hpp"
 #include "customTypes/BlendShape/BlendShapeController.hpp"
+#include "customTypes/LegMotionController.hpp"
 #include "UI/components/AvatarListCell.hpp"
 #include "VMC/VMCClient.hpp"
 #include "VMC/VMCServer.hpp"
@@ -150,11 +151,12 @@ namespace VRMQavatars::UI::ViewControllers {
                 { u"VMC", BuildVMCTab() },
                 { u"VRIK", CP_SDK::XUI::XUITabControl::Make(
                     {
-                        { u"IK", BuildIKSettingsTab() }, { u"Locomotion", BuildLocoSettingsTab() }
+                        { u"IK", BuildIKSettingsTab() }, { u"Locomotion", BuildLocoSettingsTab() },
+                        { u"Leg Motion", BuildLegMotionTab() }, { u"Leg Buttons", BuildLegButtonsTab() }
                     })
                     ->OnActiveChanged([this](const int tab)
                     {
-                        const std::vector opts = { "IK", "Locomotion" };
+                        const std::vector opts = { "IK", "Locomotion", "Leg Motion", "Leg Buttons" };
                         ikTab = opts[tab];
                         selectedTab = ikTab;
                         TabSelected();
@@ -243,6 +245,7 @@ namespace VRMQavatars::UI::ViewControllers {
             UpdateLightingTab();
             UpdateBlendshapesTab();
             UpdateCalibrationTab();
+            UpdateLegMotionTab();
         };
 
         if(AvatarManager::currentContext != nullptr)
@@ -406,7 +409,7 @@ namespace VRMQavatars::UI::ViewControllers {
             toUse = globalSprite;
             goto setButton;
         }
-        if(selectedTab == "Wind")
+        if(selectedTab == "Wind" || selectedTab == "Leg Motion" || selectedTab == "Leg Buttons")
         {
             interactable = false;
             toUse = globalSprite;
@@ -1925,6 +1928,224 @@ namespace VRMQavatars::UI::ViewControllers {
                 })
                 ->AsShared(),
         });
+    }
+
+    std::shared_ptr<CP_SDK::XUI::XUITabControl> AvatarSettingsViewController::BuildLegMotionTab()
+    {
+        const auto settings = Config::ConfigManager::GetLegMotionSettings();
+        const std::vector<std::u16string> stepOptions = { u"1 Beat", u"2 Beats", u"4 Beats" };
+        const auto& styles = LegMotionController::beatStyleNames;
+        // two settings per column at most, more do not fit on the screen
+        return CP_SDK::XUI::XUITabControl::Make({
+            {
+                u"Beat Steps",
+                CP_SDK::XUI::XUIHLayout::Make({
+                    CP_SDK::XUI::XUIVLayout::Make(
+                    {
+                        CP_SDK::XUI::XUIText::Make(u"Beat Synced Steps (In Song)"),
+                        CP_SDK::XUI::XUIToggle::Make()
+                            ->SetValue(settings.beatEnabled)
+                            ->Bind(&beatEnabledToggle)
+                            ->OnValueChanged([](const bool val) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.beatEnabled = val;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                        CP_SDK::XUI::XUIText::Make(u"Step Style"),
+                        CP_SDK::XUI::XUIDropdown::Make(styles)
+                            ->SetValue(styles[std::clamp(settings.beatStyle, 0, static_cast<int>(styles.size()) - 1)])
+                            ->Bind(&beatStyleDropdown)
+                            ->OnValueChanged([](const int idx, std::u16string_view) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.beatStyle = idx;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                    }),
+                    CP_SDK::XUI::XUIVLayout::Make(
+                    {
+                        CP_SDK::XUI::XUIText::Make(u"Step Every"),
+                        CP_SDK::XUI::XUIDropdown::Make(stepOptions)
+                            ->SetValue(settings.beatsPerStep >= 4 ? stepOptions[2] : settings.beatsPerStep >= 2 ? stepOptions[1] : stepOptions[0])
+                            ->Bind(&beatsPerStepDropdown)
+                            ->OnValueChanged([](const int idx, std::u16string_view) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.beatsPerStep = 1 << std::clamp(idx, 0, 2);
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                        CP_SDK::XUI::XUIText::Make(u"Step Intensity"),
+                        CP_SDK::XUI::XUISlider::Make()
+                            ->SetIncrements(20.0f)
+                            ->SetMinValue(0.0f)
+                            ->SetMaxValue(2.0f)
+                            ->SetValue(settings.beatIntensity)
+                            ->Bind(&beatIntensitySlider)
+                            ->OnValueChanged([](const float val) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.beatIntensity = val;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                    }),
+                })
+            },
+            {
+                u"Jump & Actions",
+                CP_SDK::XUI::XUIHLayout::Make({
+                    CP_SDK::XUI::XUIVLayout::Make(
+                    {
+                        CP_SDK::XUI::XUIText::Make(u"Lift Feet When Jumping"),
+                        CP_SDK::XUI::XUIToggle::Make()
+                            ->SetValue(settings.jumpEnabled)
+                            ->Bind(&jumpEnabledToggle)
+                            ->OnValueChanged([](const bool val) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.jumpEnabled = val;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                        CP_SDK::XUI::XUIText::Make(u"Jump Detect Speed (Lower = Sensitive)"),
+                        CP_SDK::XUI::XUISlider::Make()
+                            ->SetIncrements(16.0f)
+                            ->SetMinValue(0.4f)
+                            ->SetMaxValue(2.0f)
+                            ->SetValue(settings.jumpVelocity)
+                            ->Bind(&jumpVelocitySlider)
+                            ->OnValueChanged([](const float val) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.jumpVelocity = val;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                    }),
+                    CP_SDK::XUI::XUIVLayout::Make(
+                    {
+                        CP_SDK::XUI::XUIText::Make(u"Jump Knee Tuck"),
+                        CP_SDK::XUI::XUISlider::Make()
+                            ->SetIncrements(10.0f)
+                            ->SetMinValue(0.0f)
+                            ->SetMaxValue(1.0f)
+                            ->SetValue(settings.jumpTuck)
+                            ->Bind(&jumpTuckSlider)
+                            ->OnValueChanged([](const float val) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.jumpTuck = val;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                        CP_SDK::XUI::XUIText::Make(u"Button Action Intensity"),
+                        CP_SDK::XUI::XUISlider::Make()
+                            ->SetIncrements(13.0f)
+                            ->SetMinValue(0.2f)
+                            ->SetMaxValue(1.5f)
+                            ->SetValue(settings.actionIntensity)
+                            ->Bind(&actionIntensitySlider)
+                            ->OnValueChanged([](const float val) {
+                                auto settings = Config::ConfigManager::GetLegMotionSettings();
+                                settings.actionIntensity = val;
+                                Config::ConfigManager::SetLegMotionSettings(settings);
+                                LegMotionController::Reload();
+                            })
+                            ->AsShared(),
+                    }),
+                })
+            }
+        });
+    }
+
+    std::shared_ptr<CP_SDK::XUI::XUIHLayout> AvatarSettingsViewController::BuildLegTriggerRow(const std::u16string_view label, std::string LegTriggerSettings::* field)
+    {
+        std::vector<std::u16string> options;
+        for (const auto& name : LegMotionController::actionNames)
+            options.push_back(utf8::utf8to16(name));
+
+        std::shared_ptr<CP_SDK::XUI::XUIDropdown> dropdown;
+        auto row = CP_SDK::XUI::XUIHLayout::Make({
+            CP_SDK::XUI::XUIText::Make(label),
+            CP_SDK::XUI::XUIDropdown::Make(options)
+                ->SetValue(utf8::utf8to16(Config::ConfigManager::GetLegTriggerSettings().*field), false)
+                ->Bind(&dropdown)
+                ->OnValueChanged([field](int, const std::u16string_view val)
+                {
+                    auto settings = Config::ConfigManager::GetLegTriggerSettings();
+                    settings.*field = utf8::utf16to8(val);
+                    Config::ConfigManager::SetLegTriggerSettings(settings);
+                    LegMotionController::Reload();
+                })
+                ->AsShared()
+        });
+        legTriggerDropdowns.emplace_back(dropdown, field);
+        return row;
+    }
+
+    std::shared_ptr<CP_SDK::XUI::XUITabControl> AvatarSettingsViewController::BuildLegButtonsTab()
+    {
+        // an input can drive a leg action and a facial expression at the same time
+        return CP_SDK::XUI::XUITabControl::Make({
+            {
+                u"Buttons",
+                CP_SDK::XUI::XUIVLayout::Make({
+                    BuildLegTriggerRow(u"Y (Left controller top)", &LegTriggerSettings::Y),
+                    BuildLegTriggerRow(u"X (Left controller bottom)", &LegTriggerSettings::X),
+                    BuildLegTriggerRow(u"B (Right controller top)", &LegTriggerSettings::B),
+                    BuildLegTriggerRow(u"A (Right controller bottom)", &LegTriggerSettings::A),
+                })
+            },
+            {
+                u"Triggers",
+                CP_SDK::XUI::XUIVLayout::Make({
+                    BuildLegTriggerRow(u"Left Grip", &LegTriggerSettings::LGrip),
+                    BuildLegTriggerRow(u"Right Grip", &LegTriggerSettings::RGrip),
+                    BuildLegTriggerRow(u"Left Trigger", &LegTriggerSettings::LTrigger),
+                    BuildLegTriggerRow(u"Right Trigger", &LegTriggerSettings::RTrigger),
+                })
+            },
+            {
+                u"Left Stick",
+                CP_SDK::XUI::XUIVLayout::Make({
+                    BuildLegTriggerRow(u"Up", &LegTriggerSettings::LStickUp),
+                    BuildLegTriggerRow(u"Down", &LegTriggerSettings::LStickDown),
+                    BuildLegTriggerRow(u"Left", &LegTriggerSettings::LStickLeft),
+                    BuildLegTriggerRow(u"Right", &LegTriggerSettings::LStickRight),
+                })
+            },
+            {
+                u"Right Stick",
+                CP_SDK::XUI::XUIVLayout::Make({
+                    BuildLegTriggerRow(u"Up", &LegTriggerSettings::RStickUp),
+                    BuildLegTriggerRow(u"Down", &LegTriggerSettings::RStickDown),
+                    BuildLegTriggerRow(u"Left", &LegTriggerSettings::RStickLeft),
+                    BuildLegTriggerRow(u"Right", &LegTriggerSettings::RStickRight),
+                })
+            }
+        });
+    }
+
+    void AvatarSettingsViewController::UpdateLegMotionTab()
+    {
+        const auto settings = Config::ConfigManager::GetLegMotionSettings();
+        const auto& styles = LegMotionController::beatStyleNames;
+        beatEnabledToggle->SetValue(settings.beatEnabled, false);
+        beatStyleDropdown->SetValue(styles[std::clamp(settings.beatStyle, 0, static_cast<int>(styles.size()) - 1)], false);
+        beatsPerStepDropdown->SetValue(settings.beatsPerStep >= 4 ? u"4 Beats" : settings.beatsPerStep >= 2 ? u"2 Beats" : u"1 Beat", false);
+        beatIntensitySlider->SetValue(settings.beatIntensity, false);
+        actionIntensitySlider->SetValue(settings.actionIntensity, false);
+        jumpEnabledToggle->SetValue(settings.jumpEnabled, false);
+        jumpVelocitySlider->SetValue(settings.jumpVelocity, false);
+        jumpTuckSlider->SetValue(settings.jumpTuck, false);
+
+        const auto triggers = Config::ConfigManager::GetLegTriggerSettings();
+        for (const auto& [dropdown, field] : legTriggerDropdowns)
+            dropdown->SetValue(utf8::utf8to16(triggers.*field), false);
     }
 
     void AvatarSettingsViewController::UpdateWindTab()

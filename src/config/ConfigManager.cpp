@@ -112,4 +112,8 @@ namespace VRMQavatars::Config
 
     //Mirror
     MANAGER_ITEM_CPP_GLOBAL(Wind)
+
+    //Leg Motion
+    MANAGER_ITEM_CPP_GLOBAL(LegMotion)
+    MANAGER_ITEM_CPP_GLOBAL(LegTrigger)
 }

@@ -30,6 +30,7 @@
 #include "UI/AvatarsFlowCoordinator.hpp"
 
 #include "AvatarManager.hpp"
+#include "BeatTracker.hpp"
 #include "LightManager.hpp"
 #include "SceneEventManager.hpp"
 #include "GroundOffsetManager.hpp"
@@ -137,6 +138,7 @@ extern "C" void late_load() {
     INSTALL_HOOK(VRMLogger, SceneManager_Internal_ActiveSceneChanged);
     INSTALL_HOOK(VRMLogger, SaberPatch);
     INSTALL_HOOK(VRMLogger, BloomHook);
+    VRMQavatars::BeatTracker::InstallHooks();
 
     auto zenjeqtor = Lapiz::Zenject::Zenjector::Get();
 

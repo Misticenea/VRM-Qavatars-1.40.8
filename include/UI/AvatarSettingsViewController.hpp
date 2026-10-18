@@ -9,6 +9,8 @@
 #include "chatplex-sdk-bs/shared/CP_SDK/XUI/XUI.hpp"
 #include "chatplex-sdk-bs/shared/CP_SDK_BS/UI/ViewController.hpp"
 
+#include "config/ConfigManager.hpp"
+
 namespace VRMQavatars::UI::ViewControllers {
     class AvatarSettingsViewController : public CP_SDK_BS::UI::ViewController {
         CP_SDK_IL2CPP_INHERIT("VRMQavatars.UI.ViewControllers", AvatarSettingsViewController, CP_SDK_BS::UI::ViewController);
@@ -134,6 +136,24 @@ namespace VRMQavatars::UI::ViewControllers {
         std::shared_ptr<CP_SDK::XUI::XUISlider> autoBlinkWaitSlider;
         std::shared_ptr<CP_SDK::XUI::XUIToggle> mockEyeMovementToggle;
         std::shared_ptr<CP_SDK::XUI::XUIDropdown> neutralExpressionDropdown;
+
+        //Leg Motion
+
+        std::shared_ptr<CP_SDK::XUI::XUITabControl> BuildLegMotionTab();
+        std::shared_ptr<CP_SDK::XUI::XUITabControl> BuildLegButtonsTab();
+        std::shared_ptr<CP_SDK::XUI::XUIHLayout> BuildLegTriggerRow(std::u16string_view label, std::string LegTriggerSettings::* field);
+        void UpdateLegMotionTab();
+
+        std::shared_ptr<CP_SDK::XUI::XUIToggle> beatEnabledToggle;
+        std::shared_ptr<CP_SDK::XUI::XUIDropdown> beatStyleDropdown;
+        std::shared_ptr<CP_SDK::XUI::XUIDropdown> beatsPerStepDropdown;
+        std::shared_ptr<CP_SDK::XUI::XUISlider> beatIntensitySlider;
+        std::shared_ptr<CP_SDK::XUI::XUISlider> actionIntensitySlider;
+        std::shared_ptr<CP_SDK::XUI::XUIToggle> jumpEnabledToggle;
+        std::shared_ptr<CP_SDK::XUI::XUISlider> jumpVelocitySlider;
+        std::shared_ptr<CP_SDK::XUI::XUISlider> jumpTuckSlider;
+
+        std::vector<std::pair<std::shared_ptr<CP_SDK::XUI::XUIDropdown>, std::string LegTriggerSettings::*>> legTriggerDropdowns;
 
         //Wind
 

@@ -129,6 +129,42 @@ DECLARE_JSON_CLASS(LocomotionSettings,
     VALUE_DEFAULT(VectorThree, stepOffset, UnityEngine::Vector3(0.0f, 0.0f, 0.0f));
 )
 
+// Fake leg motion for setups without foot trackers, see LegMotionController
+DECLARE_JSON_CLASS(LegMotionSettings,
+    VALUE_DEFAULT(bool, beatEnabled, false);
+    VALUE_DEFAULT(int, beatStyle, 0);
+    VALUE_DEFAULT(int, beatsPerStep, 1);
+    VALUE_DEFAULT(float, beatIntensity, 1.0f);
+
+    VALUE_DEFAULT(float, actionIntensity, 1.0f);
+
+    VALUE_DEFAULT(bool, jumpEnabled, true);
+    VALUE_DEFAULT(float, jumpVelocity, 0.9f);
+    VALUE_DEFAULT(float, jumpTuck, 0.3f);
+)
+
+// leg action names (see LegMotionController::actionNames) bound to controller inputs
+DECLARE_JSON_CLASS(LegTriggerSettings,
+    VALUE_DEFAULT(std::string, A, "None");
+    VALUE_DEFAULT(std::string, B, "None");
+    VALUE_DEFAULT(std::string, X, "None");
+    VALUE_DEFAULT(std::string, Y, "None");
+
+    VALUE_DEFAULT(std::string, LGrip, "None");
+    VALUE_DEFAULT(std::string, RGrip, "None");
+    VALUE_DEFAULT(std::string, LTrigger, "None");
+    VALUE_DEFAULT(std::string, RTrigger, "None");
+
+    VALUE_DEFAULT(std::string, LStickUp, "None");
+    VALUE_DEFAULT(std::string, LStickDown, "None");
+    VALUE_DEFAULT(std::string, LStickLeft, "None");
+    VALUE_DEFAULT(std::string, LStickRight, "None");
+    VALUE_DEFAULT(std::string, RStickUp, "None");
+    VALUE_DEFAULT(std::string, RStickDown, "None");
+    VALUE_DEFAULT(std::string, RStickLeft, "None");
+    VALUE_DEFAULT(std::string, RStickRight, "None");
+)
+
 DECLARE_JSON_CLASS(IKSettings,
     VALUE_DEFAULT(float, legSwivel, 0.0f);
     VALUE_DEFAULT(float, armSwivel, 0.0f);
@@ -213,6 +249,8 @@ DECLARE_CONFIG(GlobalConfig,
     CONFIG_VALUE(VMC, VMCSettings, "VMC", {});
     CONFIG_VALUE(Mirror, MirrorSettings, "Mirror", {});
     CONFIG_VALUE(Wind, WindSettings, "Wind", {});
+    CONFIG_VALUE(LegMotion, LegMotionSettings, "Leg Motion", {});
+    CONFIG_VALUE(LegTrigger, LegTriggerSettings, "Leg Triggers", {});
     CONFIG_VALUE(ReplayCorrection, ReplayCorrectionSettings, "Replay Correction", {});
 
     CONFIG_VALUE(selectedFileName, std::string, "selectedFileName", "");

@@ -152,5 +152,10 @@ namespace VRMQavatars::Config
         //Mirror
 
         MANAGER_ITEM(Wind)
+
+        //Leg Motion
+
+        MANAGER_ITEM(LegMotion)
+        MANAGER_ITEM(LegTrigger)
     };
 };
